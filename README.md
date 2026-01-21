@@ -4,14 +4,13 @@ Modular quantitative risk engine for pricing simulation, exposure profiles, and 
 
 **PS:** This repository consolidates my learnings and serves as a sandbox for experimenting with new ideas.  Feel free to leave suggestions, feedback, or other contributions 🙂
 
-## Features
-- Modular risk metric framework (VaR, PFE, CaR)
-- Monte Carlo and historical simulation
-- Portfolio-level aggregation
-- Energy and derivatives-friendly abstractions
-- Expansion to other asset classes
-- Designed for production and research parity
-
+## Features to implement
+- Modular framework for quantitative risk metrics (VaR, PFE, CaR)
+- Monte Carlo and historical simulation engines
+- Portfolio-level risk aggregation
+- Abstractions supporting equities, fixed income, energy, and derivatives
+- Extensible design for additional asset classes
+- Suitable for both research and production environments
 
 ## Suggested Repository Structure
 
