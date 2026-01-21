@@ -12,13 +12,16 @@ Here i will consolidated some knowledge and experiments some new one.
 - Expansion to other asset classes
 - Designed for production and research parity
 
-## Possible structure 
 
+## Suggested Repository Structure
+
+```text
 risk-engine/
 │
 ├── risk_engine/
 │   ├── __init__.py
 │   ├── config/
+│   │
 │   ├── core/
 │   │   ├── engine.py
 │   │   ├── portfolio.py
@@ -33,11 +36,11 @@ risk-engine/
 │   │   ├── var.py
 │   │   ├── pfe.py
 │   │   ├── car.py
-│   │   ├── sensitivities.py
+│   │   └── sensitivities.py
 │   │
 │   ├── simulation/
 │   │   ├── monte_carlo.py
-│   │   ├── scenarios.py
+│   │   └── scenarios.py
 │   │
 │   └── utils/
 │
