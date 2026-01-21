@@ -2,7 +2,7 @@
 
 Modular quantitative risk engine for pricing simulation, exposure profiles, and risk metrics.
 
-Here i will consolidated some knowledge and experiments some new one. 
+**PS:** This repository consolidates my learnings and serves as a sandbox for experimenting with new ideas.  Feel free to leave suggestions, feedback, or other contributions 🙂
 
 ## Features
 - Modular risk metric framework (VaR, PFE, CaR)
