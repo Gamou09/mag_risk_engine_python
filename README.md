@@ -12,6 +12,24 @@ Modular quantitative risk engine for pricing simulation, exposure profiles, and 
 - Extensible design for additional asset classes
 - Suitable for both research and production environments
 
+## Running examples
+
+Run examples from the repo root so the `risk_engine` package is on the import path.
+
+```bash
+. .venv/bin/activate
+python -m examples.historical_var_example
+python -m examples.parametric_var_example
+python -m examples.monte_carlo_var_example
+python -m examples.portfolio_parametric_var_example
+```
+
+Alternative if you prefer running scripts directly:
+
+```bash
+PYTHONPATH=. python examples/historical_var_example.py
+```
+
 ## Suggested Repository Structure
 
 ```text

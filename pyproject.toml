@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mag-risk-engine-python"
+version = "0.1.0"
+description = "Modular quantitative risk engine for pricing simulation, exposure profiles, and risk metrics."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+]
+
+[tool.setuptools.packages.find]
+include = ["risk_engine*"]
