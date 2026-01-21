@@ -16,7 +16,7 @@ Here i will consolidated some knowledge and experiments some new one.
 ## Suggested Repository Structure
 
 ```text
-risk-engine/
+ma_risk_engine_python/
 │
 ├── risk_engine/
 │   ├── __init__.py
