@@ -80,7 +80,11 @@ def historical_var(
 
 
 def _normal_ppf(probability: float) -> float:
-    """Approximate inverse CDF for the standard normal distribution."""
+    """Approximate inverse CDF for the standard normal distribution.
+
+    see https://web.archive.org/web/20150910063919/http://home.online.no/~pjacklam/notes/invnorm/
+
+    """
     if probability <= 0.0 or probability >= 1.0:
         raise ValueError("probability must be in (0, 1)")
 
