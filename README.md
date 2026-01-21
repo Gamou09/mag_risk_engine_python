@@ -15,7 +15,7 @@ Modular quantitative risk engine for pricing simulation, exposure profiles, and 
 ## Suggested Repository Structure
 
 ```text
-ma_risk_engine_python/
+mag_risk_engine_python/
 │
 ├── risk_engine/
 │   ├── __init__.py
