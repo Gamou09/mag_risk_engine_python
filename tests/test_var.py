@@ -101,6 +101,7 @@ def test_monte_carlo_var_deterministic_seed():
     assert result.horizon == 1
     assert result.num_sims == 5000
     assert result.seed == 123
+    assert result.ddof == 1
     assert result.var >= 0.0
 
 
@@ -108,6 +109,12 @@ def test_monte_carlo_var_deterministic_seed():
 def test_monte_carlo_var_invalid_sims(num_sims):
     with pytest.raises(ValueError, match="num_sims"):
         monte_carlo_var([0.01, -0.01], confidence=0.95, horizon=1, num_sims=num_sims)
+
+
+@pytest.mark.parametrize("ddof", [-1, 3])
+def test_monte_carlo_var_invalid_ddof(ddof):
+    with pytest.raises(ValueError, match="ddof"):
+        monte_carlo_var([0.01, -0.01], confidence=0.95, horizon=1, ddof=ddof)
 
 
 def test_portfolio_var_from_returns_matches_historical():

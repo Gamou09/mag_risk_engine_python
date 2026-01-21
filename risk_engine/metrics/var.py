@@ -41,6 +41,7 @@ class MonteCarloVaRResult:
     std: float
     num_sims: int
     seed: int | None
+    ddof: int
 
 
 def historical_var(
@@ -225,21 +226,29 @@ def monte_carlo_var(
     horizon: int = 1,
     num_sims: int = 10000,
     seed: int | None = None,
+    ddof: int = 1,
 ) -> MonteCarloVaRResult:
-    """Compute Monte Carlo VaR using a normal return model."""
+    """Compute Monte Carlo VaR using a normal return model.
+
+    Uses standard deviation estimated with `ddof` (1 for sample, 0 for population).
+    """
     if confidence <= 0.0 or confidence >= 1.0:
         raise ValueError("confidence must be in (0, 1)")
     if horizon <= 0:
         raise ValueError("horizon must be a positive integer")
     if num_sims <= 0:
         raise ValueError("num_sims must be a positive integer")
+    if ddof < 0:
+        raise ValueError("ddof must be >= 0")
 
     data = np.asarray(returns, dtype=float)
     if data.size == 0:
         raise ValueError("returns must contain at least one value")
+    if data.size - ddof <= 0:
+        raise ValueError("ddof is too large for the returns length")
 
     mean = float(np.mean(data))
-    std = float(np.std(data, ddof=1)) if data.size > 1 else 0.0
+    std = float(np.std(data, ddof=ddof)) if data.size > 1 else 0.0
 
     rng = np.random.default_rng(seed)
     sims = rng.normal(loc=mean, scale=std, size=num_sims)
@@ -256,6 +265,7 @@ def monte_carlo_var(
         std=std,
         num_sims=int(num_sims),
         seed=seed,
+        ddof=int(ddof),
     )
 
 
