@@ -19,6 +19,7 @@ class EuropeanOption:
     rate: float
     vol: float
     option_type: str = "call"
+    symbol: str | None = None
 
 
 def _norm_cdf(x: float) -> float:

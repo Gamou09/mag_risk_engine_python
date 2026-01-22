@@ -22,6 +22,12 @@ python -m examples.historical_var_example
 python -m examples.parametric_var_example
 python -m examples.monte_carlo_var_example
 python -m examples.portfolio_parametric_var_example
+python -m examples.scenario_pfe_single_position_example
+python -m examples.scenario_pfe_three_positions_example
+python -m examples.scenario_pfe_profile_example
+python -m examples.monte_carlo_pfe_profile_example
+python -m examples.monte_carlo_pfe_profile_visual_example
+python -m examples.analytic_pfe_profile_example
 ```
 
 Alternative if you prefer running scripts directly:
