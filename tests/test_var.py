@@ -28,6 +28,16 @@ def test_historical_var_basic():
     assert result.horizon == 1
 
 
+def test_historical_var_log_scaling():
+    returns = np.array([0.01, -0.02, 0.005, 0.0])
+    mean = float(np.mean(returns))
+    quantile = float(np.quantile(returns, 0.05, method="linear"))
+    expected_quantile = mean * 2 + (quantile - mean) * np.sqrt(2.0)
+    result = historical_var(returns, confidence=0.95, horizon=2, return_type="log")
+
+    assert result.var == pytest.approx(-expected_quantile)
+
+
 def test_historical_var_horizon_scaling():
     returns = np.array([0.01, -0.02, 0.00, 0.03, -0.01])
     one_day = historical_var(returns, confidence=0.95, horizon=1)
@@ -69,6 +79,19 @@ def test_parametric_var_basic():
     assert result.var == pytest.approx(expected_var)
 
 
+def test_parametric_var_log_scaling():
+    returns = np.array([0.02, -0.01, 0.00, 0.03, -0.02])
+    mean = float(np.mean(returns))
+    std = float(np.std(returns, ddof=1))
+    z = float(_normal_ppf(1.0 - 0.95))
+    mean_h = mean * 5
+    std_h = std * np.sqrt(5.0)
+    expected_var = -(mean_h + z * std_h)
+    result = parametric_var(returns, confidence=0.95, horizon=5, return_type="log")
+
+    assert result.var == pytest.approx(expected_var)
+
+
 def test_parametric_portfolio_var_basic():
     weights = np.array([0.6, 0.4])
     covariance = np.array([[0.04, 0.01], [0.01, 0.09]])
@@ -102,6 +125,16 @@ def test_monte_carlo_var_deterministic_seed():
     assert result.num_sims == 5000
     assert result.seed == 123
     assert result.ddof == 1
+    assert result.var >= 0.0
+
+
+def test_monte_carlo_var_log_return_seeded():
+    returns = np.array([0.01, -0.02, 0.015, -0.005, 0.0])
+    result = monte_carlo_var(
+        returns, confidence=0.95, horizon=3, num_sims=2000, seed=7, return_type="log"
+    )
+
+    assert isinstance(result, MonteCarloVaRResult)
     assert result.var >= 0.0
 
 

@@ -48,6 +48,7 @@ def historical_var(
     returns: Sequence[float] | np.ndarray,
     confidence: float = 0.95,
     horizon: int = 1,
+    return_type: str = "simple",
 ) -> HistoricalVaRResult:
     """Compute historical VaR from a return series.
 
@@ -55,6 +56,7 @@ def historical_var(
         returns: Sequence of periodic returns (e.g., daily), as decimals.
         confidence: Confidence level (e.g., 0.95 for 95%).
         horizon: Scaling horizon in the same return units (e.g., days).
+        return_type: "simple" or "log".
 
     Returns:
         HistoricalVaRResult with VaR reported as a positive number.
@@ -68,9 +70,16 @@ def historical_var(
     if data.size == 0:
         raise ValueError("returns must contain at least one value")
 
+    return_kind = _validate_return_type(return_type)
+    mean = float(np.mean(data))
+
     # Historical VaR uses the left tail quantile of returns.
     quantile = np.quantile(data, 1.0 - confidence, method="linear")
-    var = -quantile * np.sqrt(horizon)
+    if return_kind == "log":
+        scaled_quantile = mean * horizon + (quantile - mean) * np.sqrt(horizon)
+    else:
+        scaled_quantile = quantile * np.sqrt(horizon)
+    var = -scaled_quantile
 
     return HistoricalVaRResult(
         var=float(var),
@@ -144,10 +153,18 @@ def _normal_ppf(probability: float) -> float:
     )
 
 
+def _validate_return_type(return_type: str) -> str:
+    return_kind = return_type.lower()
+    if return_kind not in {"simple", "log"}:
+        raise ValueError("return_type must be 'simple' or 'log'")
+    return return_kind
+
+
 def parametric_var(
     returns: Sequence[float] | np.ndarray,
     confidence: float = 0.95,
     horizon: int = 1,
+    return_type: str = "simple",
 ) -> ParametricVaRResult:
     """Compute parametric (variance-covariance) VaR from a return series."""
     if confidence <= 0.0 or confidence >= 1.0:
@@ -161,9 +178,16 @@ def parametric_var(
 
     mean = float(np.mean(data))
     std = float(np.std(data, ddof=1)) if data.size > 1 else 0.0
+    return_kind = _validate_return_type(return_type)
     z = float(_normal_ppf(1.0 - confidence))
-    quantile = mean + z * std
-    var = -quantile * np.sqrt(horizon)
+    if return_kind == "log":
+        mean_h = mean * horizon
+        std_h = std * np.sqrt(horizon)
+        quantile = mean_h + z * std_h
+        var = -quantile
+    else:
+        quantile = mean + z * std
+        var = -quantile * np.sqrt(horizon)
 
     return ParametricVaRResult(
         var=float(var),
@@ -181,6 +205,7 @@ def parametric_portfolio_var(
     mean: Sequence[float] | np.ndarray | None = None,
     confidence: float = 0.95,
     horizon: int = 1,
+    return_type: str = "simple",
 ) -> ParametricVaRResult:
     """Compute parametric VaR for a portfolio using weights and covariance."""
     if confidence <= 0.0 or confidence >= 1.0:
@@ -206,9 +231,16 @@ def parametric_portfolio_var(
     portfolio_var = float(np.dot(w, np.dot(cov, w)))
     portfolio_std = float(np.sqrt(max(portfolio_var, 0.0)))
 
+    return_kind = _validate_return_type(return_type)
     z = float(_normal_ppf(1.0 - confidence))
-    quantile = portfolio_mean + z * portfolio_std
-    var = -quantile * np.sqrt(horizon)
+    if return_kind == "log":
+        mean_h = portfolio_mean * horizon
+        std_h = portfolio_std * np.sqrt(horizon)
+        quantile = mean_h + z * std_h
+        var = -quantile
+    else:
+        quantile = portfolio_mean + z * portfolio_std
+        var = -quantile * np.sqrt(horizon)
 
     return ParametricVaRResult(
         var=float(var),
@@ -227,6 +259,7 @@ def monte_carlo_var(
     num_sims: int = 10000,
     seed: int | None = None,
     ddof: int = 1,
+    return_type: str = "simple",
 ) -> MonteCarloVaRResult:
     """Compute Monte Carlo VaR using a normal return model.
 
@@ -249,10 +282,14 @@ def monte_carlo_var(
 
     mean = float(np.mean(data))
     std = float(np.std(data, ddof=ddof)) if data.size > 1 else 0.0
+    return_kind = _validate_return_type(return_type)
 
     rng = np.random.default_rng(seed)
-    sims = rng.normal(loc=mean, scale=std, size=num_sims)
-    sims = sims * np.sqrt(horizon)
+    if return_kind == "log":
+        sims = rng.normal(loc=mean * horizon, scale=std * np.sqrt(horizon), size=num_sims)
+    else:
+        sims = rng.normal(loc=mean, scale=std, size=num_sims)
+        sims = sims * np.sqrt(horizon)
 
     quantile = np.quantile(sims, 1.0 - confidence, method="linear")
     var = -quantile
@@ -286,6 +323,7 @@ def portfolio_var_from_returns(
     horizon: int | Sequence[int] = 1,
     num_sims: int = 10000,
     seed: int | None = None,
+    return_type: str = "simple",
 ) -> (
     HistoricalVaRResult
     | ParametricVaRResult
@@ -324,9 +362,23 @@ def portfolio_var_from_returns(
     for c in confidences:
         for h in horizons:
             if method_key == "historical":
-                results.append(historical_var(portfolio_returns, confidence=c, horizon=int(h)))
+                results.append(
+                    historical_var(
+                        portfolio_returns,
+                        confidence=c,
+                        horizon=int(h),
+                        return_type=return_type,
+                    )
+                )
             elif method_key == "parametric":
-                results.append(parametric_var(portfolio_returns, confidence=c, horizon=int(h)))
+                results.append(
+                    parametric_var(
+                        portfolio_returns,
+                        confidence=c,
+                        horizon=int(h),
+                        return_type=return_type,
+                    )
+                )
             else:
                 results.append(
                     monte_carlo_var(
@@ -335,6 +387,7 @@ def portfolio_var_from_returns(
                         horizon=int(h),
                         num_sims=num_sims,
                         seed=seed,
+                        return_type=return_type,
                     )
                 )
 
