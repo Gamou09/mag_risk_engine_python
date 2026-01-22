@@ -2,24 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
 from typing import Any, Mapping
 
+from risk_engine.core.instruments import EuropeanOption
+
 from .base import PricingModel
-
-
-@dataclass(frozen=True)
-class EuropeanOption:
-    """Simple European option instrument."""
-
-    spot: float
-    strike: float
-    maturity: float
-    rate: float
-    vol: float
-    option_type: str = "call"
-    symbol: str | None = None
 
 
 def _norm_cdf(x: float) -> float:
