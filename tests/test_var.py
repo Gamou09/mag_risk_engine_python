@@ -38,6 +38,14 @@ def test_historical_var_log_scaling():
     assert result.var == pytest.approx(-expected_quantile)
 
 
+def test_historical_var_right_tail():
+    returns = np.array([-0.02, -0.01, 0.0, 0.01, 0.03])
+    quantile = float(np.quantile(returns, 0.95, method="linear"))
+    result = historical_var(returns, confidence=0.95, horizon=1, tail="right")
+
+    assert result.var == pytest.approx(quantile)
+
+
 def test_historical_var_horizon_scaling():
     returns = np.array([0.01, -0.02, 0.00, 0.03, -0.01])
     one_day = historical_var(returns, confidence=0.95, horizon=1)
@@ -92,6 +100,17 @@ def test_parametric_var_log_scaling():
     assert result.var == pytest.approx(expected_var)
 
 
+def test_parametric_var_right_tail():
+    returns = np.array([-0.02, -0.01, 0.0, 0.01, 0.03])
+    mean = float(np.mean(returns))
+    std = float(np.std(returns, ddof=1))
+    z = float(_normal_ppf(0.95))
+    expected_var = (mean + z * std)
+    result = parametric_var(returns, confidence=0.95, horizon=1, tail="right")
+
+    assert result.var == pytest.approx(expected_var)
+
+
 def test_parametric_portfolio_var_basic():
     weights = np.array([0.6, 0.4])
     covariance = np.array([[0.04, 0.01], [0.01, 0.09]])
@@ -125,6 +144,7 @@ def test_monte_carlo_var_deterministic_seed():
     assert result.num_sims == 5000
     assert result.seed == 123
     assert result.ddof == 1
+    assert result.method == "normal"
     assert result.var >= 0.0
 
 
@@ -148,6 +168,37 @@ def test_monte_carlo_var_invalid_sims(num_sims):
 def test_monte_carlo_var_invalid_ddof(ddof):
     with pytest.raises(ValueError, match="ddof"):
         monte_carlo_var([0.01, -0.01], confidence=0.95, horizon=1, ddof=ddof)
+
+
+def test_monte_carlo_var_bootstrap_compound():
+    returns = np.array([0.01, -0.02, 0.005, 0.0])
+    seed = 42
+    num_sims = 1000
+    horizon = 3
+
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, returns.size, size=(num_sims, horizon))
+    samples = returns[idx]
+    sims = np.prod(1.0 + samples, axis=1) - 1.0
+    expected_quantile = np.quantile(sims, 0.05, method="linear")
+    expected_var = -expected_quantile
+
+    result = monte_carlo_var(
+        returns,
+        confidence=0.95,
+        horizon=horizon,
+        num_sims=num_sims,
+        seed=seed,
+        method="bootstrap",
+    )
+
+    assert result.method == "bootstrap"
+    assert result.var == pytest.approx(expected_var)
+
+
+def test_monte_carlo_var_invalid_method():
+    with pytest.raises(ValueError, match="method"):
+        monte_carlo_var([0.01, -0.01], confidence=0.95, horizon=1, method="bad")
 
 
 def test_portfolio_var_from_returns_matches_historical():
@@ -192,7 +243,7 @@ def test_portfolio_var_from_returns_multi_confidence_horizon():
     )
 
     assert len(results) == 4
-    assert all(isinstance(result, ParametricVaRResult) for result in results)
+    assert all(isinstance(result, ParametricVaRResult) for result in results.values())
 
 
 def test_portfolio_var_from_returns_invalid_method():
@@ -201,4 +252,14 @@ def test_portfolio_var_from_returns_invalid_method():
             np.array([[0.01, -0.02], [0.02, 0.01]]),
             np.array([0.5, 0.5]),
             method="unknown",
+        )
+
+
+def test_portfolio_var_from_returns_weight_sum_warning():
+    asset_returns = np.array([[0.01, -0.02], [0.02, 0.01]])
+    weights = np.array([0.7, 0.7])
+
+    with pytest.warns(RuntimeWarning, match="weights do not sum to 1.0"):
+        portfolio_var_from_returns(
+            asset_returns, weights, method="historical", check_weight_sum=True
         )

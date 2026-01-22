@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Sequence
+import warnings
 
 import numpy as np
+try:  # Prefer SciPy when available for accurate normal quantiles.
+    from scipy.stats import norm
+except ImportError:  # pragma: no cover - fallback for minimal installs.
+    norm = None
 
 
 @dataclass(frozen=True)
@@ -42,6 +47,7 @@ class MonteCarloVaRResult:
     num_sims: int
     seed: int | None
     ddof: int
+    method: str
 
 
 def historical_var(
@@ -49,6 +55,7 @@ def historical_var(
     confidence: float = 0.95,
     horizon: int = 1,
     return_type: str = "simple",
+    tail: str = "left",
 ) -> HistoricalVaRResult:
     """Compute historical VaR from a return series.
 
@@ -57,6 +64,7 @@ def historical_var(
         confidence: Confidence level (e.g., 0.95 for 95%).
         horizon: Scaling horizon in the same return units (e.g., days).
         return_type: "simple" or "log".
+        tail: "left" for loss tail or "right" for gain tail.
 
     Returns:
         HistoricalVaRResult with VaR reported as a positive number.
@@ -71,15 +79,17 @@ def historical_var(
         raise ValueError("returns must contain at least one value")
 
     return_kind = _validate_return_type(return_type)
+    tail_kind = _validate_tail(tail)
     mean = float(np.mean(data))
 
     # Historical VaR uses the left tail quantile of returns.
-    quantile = np.quantile(data, 1.0 - confidence, method="linear")
+    tail_prob = confidence if tail_kind == "right" else 1.0 - confidence
+    quantile = np.quantile(data, tail_prob, method="linear")
     if return_kind == "log":
         scaled_quantile = mean * horizon + (quantile - mean) * np.sqrt(horizon)
     else:
         scaled_quantile = quantile * np.sqrt(horizon)
-    var = -scaled_quantile
+    var = scaled_quantile if tail_kind == "right" else -scaled_quantile
 
     return HistoricalVaRResult(
         var=float(var),
@@ -92,11 +102,14 @@ def historical_var(
 def _normal_ppf(probability: float) -> float:
     """Approximate inverse CDF for the standard normal distribution.
 
-    see https://web.archive.org/web/20150910063919/http://home.online.no/~pjacklam/notes/invnorm/
-
+    Uses SciPy when available, otherwise falls back to Acklam's approximation:
+    https://web.archive.org/web/20150910063919/http://home.online.no/~pjacklam/notes/invnorm/
     """
     if probability <= 0.0 or probability >= 1.0:
         raise ValueError("probability must be in (0, 1)")
+
+    if norm is not None:
+        return float(norm.ppf(probability))
 
     a = (
         -3.969683028665376e01,
@@ -160,11 +173,19 @@ def _validate_return_type(return_type: str) -> str:
     return return_kind
 
 
+def _validate_tail(tail: str) -> str:
+    tail_kind = tail.lower()
+    if tail_kind not in {"left", "right"}:
+        raise ValueError("tail must be 'left' or 'right'")
+    return tail_kind
+
+
 def parametric_var(
     returns: Sequence[float] | np.ndarray,
     confidence: float = 0.95,
     horizon: int = 1,
     return_type: str = "simple",
+    tail: str = "left",
 ) -> ParametricVaRResult:
     """Compute parametric (variance-covariance) VaR from a return series."""
     if confidence <= 0.0 or confidence >= 1.0:
@@ -179,15 +200,17 @@ def parametric_var(
     mean = float(np.mean(data))
     std = float(np.std(data, ddof=1)) if data.size > 1 else 0.0
     return_kind = _validate_return_type(return_type)
-    z = float(_normal_ppf(1.0 - confidence))
+    tail_kind = _validate_tail(tail)
+    tail_prob = confidence if tail_kind == "right" else 1.0 - confidence
+    z = float(_normal_ppf(tail_prob))
     if return_kind == "log":
         mean_h = mean * horizon
         std_h = std * np.sqrt(horizon)
         quantile = mean_h + z * std_h
-        var = -quantile
+        var = quantile if tail_kind == "right" else -quantile
     else:
         quantile = mean + z * std
-        var = -quantile * np.sqrt(horizon)
+        var = (quantile * np.sqrt(horizon)) if tail_kind == "right" else -quantile * np.sqrt(horizon)
 
     return ParametricVaRResult(
         var=float(var),
@@ -206,6 +229,9 @@ def parametric_portfolio_var(
     confidence: float = 0.95,
     horizon: int = 1,
     return_type: str = "simple",
+    check_weight_sum: bool = False,
+    warn_non_psd: bool = False,
+    tail: str = "left",
 ) -> ParametricVaRResult:
     """Compute parametric VaR for a portfolio using weights and covariance."""
     if confidence <= 0.0 or confidence >= 1.0:
@@ -223,6 +249,13 @@ def parametric_portfolio_var(
     if cov.shape[0] != w.size:
         raise ValueError("weights and covariance dimensions must match")
 
+    if check_weight_sum and not np.isclose(np.sum(w), 1.0):
+        warnings.warn("weights do not sum to 1.0", RuntimeWarning, stacklevel=2)
+    if warn_non_psd:
+        min_eig = float(np.min(np.linalg.eigvalsh(cov)))
+        if min_eig < -1e-12:
+            warnings.warn("covariance matrix is not positive semidefinite", RuntimeWarning, stacklevel=2)
+
     mean_vec = np.zeros_like(w) if mean is None else np.asarray(mean, dtype=float)
     if mean_vec.size != w.size:
         raise ValueError("mean must match weights length")
@@ -232,15 +265,17 @@ def parametric_portfolio_var(
     portfolio_std = float(np.sqrt(max(portfolio_var, 0.0)))
 
     return_kind = _validate_return_type(return_type)
-    z = float(_normal_ppf(1.0 - confidence))
+    tail_kind = _validate_tail(tail)
+    tail_prob = confidence if tail_kind == "right" else 1.0 - confidence
+    z = float(_normal_ppf(tail_prob))
     if return_kind == "log":
         mean_h = portfolio_mean * horizon
         std_h = portfolio_std * np.sqrt(horizon)
         quantile = mean_h + z * std_h
-        var = -quantile
+        var = quantile if tail_kind == "right" else -quantile
     else:
         quantile = portfolio_mean + z * portfolio_std
-        var = -quantile * np.sqrt(horizon)
+        var = (quantile * np.sqrt(horizon)) if tail_kind == "right" else -quantile * np.sqrt(horizon)
 
     return ParametricVaRResult(
         var=float(var),
@@ -260,6 +295,8 @@ def monte_carlo_var(
     seed: int | None = None,
     ddof: int = 1,
     return_type: str = "simple",
+    method: str = "normal",
+    tail: str = "left",
 ) -> MonteCarloVaRResult:
     """Compute Monte Carlo VaR using a normal return model.
 
@@ -283,16 +320,34 @@ def monte_carlo_var(
     mean = float(np.mean(data))
     std = float(np.std(data, ddof=ddof)) if data.size > 1 else 0.0
     return_kind = _validate_return_type(return_type)
+    method_kind = method.lower()
+    if method_kind not in {"normal", "bootstrap"}:
+        raise ValueError("method must be 'normal' or 'bootstrap'")
+    tail_kind = _validate_tail(tail)
 
     rng = np.random.default_rng(seed)
-    if return_kind == "log":
-        sims = rng.normal(loc=mean * horizon, scale=std * np.sqrt(horizon), size=num_sims)
+    if method_kind == "bootstrap":
+        if horizon == 1:
+            sims = rng.choice(data, size=num_sims, replace=True)
+        else:
+            idx = rng.integers(0, data.size, size=(num_sims, horizon))
+            samples = data[idx]
+            if return_kind == "log":
+                sims = np.sum(samples, axis=1)
+            else:
+                sims = np.prod(1.0 + samples, axis=1) - 1.0
     else:
-        sims = rng.normal(loc=mean, scale=std, size=num_sims)
-        sims = sims * np.sqrt(horizon)
+        if return_kind == "log":
+            sims = rng.normal(
+                loc=mean * horizon, scale=std * np.sqrt(horizon), size=num_sims
+            )
+        else:
+            sims = rng.normal(loc=mean, scale=std, size=num_sims)
+            sims = sims * np.sqrt(horizon)
 
-    quantile = np.quantile(sims, 1.0 - confidence, method="linear")
-    var = -quantile
+    tail_prob = confidence if tail_kind == "right" else 1.0 - confidence
+    quantile = np.quantile(sims, tail_prob, method="linear")
+    var = quantile if tail_kind == "right" else -quantile
 
     return MonteCarloVaRResult(
         var=float(var),
@@ -303,6 +358,7 @@ def monte_carlo_var(
         num_sims=int(num_sims),
         seed=seed,
         ddof=int(ddof),
+        method=method_kind,
     )
 
 
@@ -324,11 +380,17 @@ def portfolio_var_from_returns(
     num_sims: int = 10000,
     seed: int | None = None,
     return_type: str = "simple",
+    check_weight_sum: bool = False,
+    mc_method: str = "normal",
+    tail: str = "left",
 ) -> (
     HistoricalVaRResult
     | ParametricVaRResult
     | MonteCarloVaRResult
-    | list[HistoricalVaRResult | ParametricVaRResult | MonteCarloVaRResult]
+    | dict[
+        tuple[float, int],
+        HistoricalVaRResult | ParametricVaRResult | MonteCarloVaRResult,
+    ]
 ):
     """Compute portfolio VaR from asset returns and weights.
 
@@ -341,6 +403,8 @@ def portfolio_var_from_returns(
     w = np.asarray(weights, dtype=float)
     if w.ndim != 1 or w.size != data.shape[1]:
         raise ValueError("weights length must match number of assets")
+    if check_weight_sum and not np.isclose(np.sum(w), 1.0):
+        warnings.warn("weights do not sum to 1.0", RuntimeWarning, stacklevel=2)
 
     confidences, conf_scalar = _as_list(confidence, "confidence")
     horizons, horizon_scalar = _as_list(horizon, "horizon")
@@ -357,30 +421,35 @@ def portfolio_var_from_returns(
         raise ValueError("method must be one of: historical, parametric, monte_carlo")
 
     portfolio_returns = data @ w
-    results: list[HistoricalVaRResult | ParametricVaRResult | MonteCarloVaRResult] = []
+    results: dict[
+        tuple[float, int],
+        HistoricalVaRResult | ParametricVaRResult | MonteCarloVaRResult,
+    ] = {}
 
     for c in confidences:
         for h in horizons:
             if method_key == "historical":
-                results.append(
+                result = (
                     historical_var(
                         portfolio_returns,
                         confidence=c,
                         horizon=int(h),
                         return_type=return_type,
+                        tail=tail,
                     )
                 )
             elif method_key == "parametric":
-                results.append(
+                result = (
                     parametric_var(
                         portfolio_returns,
                         confidence=c,
                         horizon=int(h),
                         return_type=return_type,
+                        tail=tail,
                     )
                 )
             else:
-                results.append(
+                result = (
                     monte_carlo_var(
                         portfolio_returns,
                         confidence=c,
@@ -388,9 +457,12 @@ def portfolio_var_from_returns(
                         num_sims=num_sims,
                         seed=seed,
                         return_type=return_type,
+                        method=mc_method,
+                        tail=tail,
                     )
                 )
+            results[(float(c), int(h))] = result
 
     if conf_scalar and horizon_scalar:
-        return results[0]
+        return next(iter(results.values()))
     return results

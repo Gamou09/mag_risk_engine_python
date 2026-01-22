@@ -24,12 +24,24 @@ def main() -> None:
     )
 
     print("Portfolio VaR from returns (historical)")
-    for result in results:
+    for (confidence, horizon), result in results.items():
         print(
-            f"confidence={result.confidence:.2f} "
-            f"horizon={result.horizon} "
+            f"confidence={confidence:.2f} "
+            f"horizon={horizon} "
             f"var={result.var:.6f}"
         )
+
+    right_tail = portfolio_var_from_returns(
+        asset_returns,
+        weights,
+        method="historical",
+        confidence=0.95,
+        horizon=1,
+        tail="right",
+    )
+    print("")
+    print("Right-tail example")
+    print(f"confidence={right_tail.confidence:.2f} horizon={right_tail.horizon} var={right_tail.var:.6f}")
 
 
 if __name__ == "__main__":
