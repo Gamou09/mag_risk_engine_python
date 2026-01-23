@@ -12,7 +12,14 @@ class Position:
 
     instrument: Any
     quantity: float = 1.0
+    direction: str = "long"
     label: str | None = None
+
+    def __post_init__(self) -> None:
+        direction = self.direction.lower()
+        if direction not in ("long", "short"):
+            raise ValueError("direction must be 'long' or 'short'")
+        object.__setattr__(self, "direction", direction)
 
 
 @dataclass(frozen=True)

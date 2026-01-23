@@ -20,6 +20,7 @@ def main() -> None:
                     symbol="ABC",
                 ),
                 quantity=5.0,
+                direction="short",
                 label="equity_forward",
             ),
             Position(

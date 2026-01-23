@@ -227,12 +227,14 @@ def _extract_underlying_params(
     default_dividend = None
     if len(market_data.dividends) == 1:
         default_dividend = float(next(iter(market_data.dividends.values())))
+    underlying_symbol = None
     direction = None
 
     for position in portfolio:
         instrument = position.instrument
         qty = position.quantity
         if isinstance(instrument, EquityForward):
+            inst_symbol = instrument.symbol
             inst_spot = (
                 market_data.spots.get(instrument.symbol, instrument.spot)
                 if instrument.symbol
@@ -252,6 +254,7 @@ def _extract_underlying_params(
                 raise ValueError("market_data.vols must include forward symbol vol")
             inst_direction = 1.0
         elif isinstance(instrument, EuropeanOption):
+            inst_symbol = getattr(instrument, "symbol", None)
             inst_spot = instrument.spot
             inst_rate = instrument.rate
             inst_div = default_dividend if default_dividend is not None else 0.0
@@ -265,6 +268,12 @@ def _extract_underlying_params(
                 raise ValueError("option_type must be 'call' or 'put'")
         else:
             raise ValueError("analytic_pfe supports EquityForward and EuropeanOption only")
+
+        if inst_symbol is not None:
+            if underlying_symbol is None:
+                underlying_symbol = inst_symbol
+            elif underlying_symbol != inst_symbol:
+                raise ValueError("all instruments must share the same underlying symbol")
 
         signed_direction = inst_direction if qty >= 0.0 else -inst_direction
         if direction is None:
@@ -423,6 +432,7 @@ def _roll_portfolio(portfolio: Portfolio, horizon: float) -> Portfolio:
         Position(
             instrument=_roll_instrument(position.instrument, horizon),
             quantity=position.quantity,
+            direction=position.direction,
             label=position.label,
         )
         for position in portfolio
