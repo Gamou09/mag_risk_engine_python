@@ -4,7 +4,7 @@ from risk_engine.core.engine import MarketData
 from risk_engine.core.instruments import EquityForward
 from risk_engine.core.portfolio import Portfolio, Position
 from risk_engine.metrics.pfe import analytic_pfe_profile
-from risk_engine.models.pricing import EuropeanOption
+from risk_engine.core.instruments import EuropeanOption
 
 
 def main() -> None:

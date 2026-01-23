@@ -37,6 +37,7 @@ def main() -> None:
                     rate=0.02,
                     vol=0.25,
                     option_type="call",
+                    symbol="ABC",
                 ),
                 quantity=3.0,
                 label="equity_option",

@@ -5,7 +5,7 @@ from risk_engine.core.instruments import EquityForward, FixedRateBond
 from risk_engine.core.portfolio import Portfolio, Position
 from risk_engine.metrics.var import historical_var
 from risk_engine.models.curves import FlatZeroCurve
-from risk_engine.models.pricing import EuropeanOption
+from risk_engine.core.instruments import EuropeanOption
 
 
 def main() -> None:
@@ -19,6 +19,7 @@ def main() -> None:
                     rate=0.02,
                     vol=0.25,
                     option_type="call",
+                    symbol="ABC",
                 ),
                 quantity=10.0,
                 label="call_option",
