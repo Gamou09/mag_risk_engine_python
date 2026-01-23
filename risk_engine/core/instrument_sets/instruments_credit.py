@@ -4,33 +4,54 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from risk_engine.core.instrument_sets.instrument_base import Instrument
+from risk_engine.core.instrument_sets.risk_factors import (
+    RISK_ASSET_SPOT,
+    RISK_CREDIT_SPREAD,
+    RISK_CREDIT_VOL,
+    RISK_DEFAULT_INTENSITY,
+    RISK_FUNDING_RATE,
+    RISK_RECOVERY_RATE,
+)
 
+
+# Pure Credit Instruments
 @dataclass(frozen=True)
-class CreditDefaultSwap:
+class CreditDefaultSwap(Instrument):
     """CDS on a single reference entity with fixed spread."""
 
+    ASSET_CLASS = "Credit"
     notional: float
     spread: float
     maturity: float
     reference: str
     currency: str = "USD"
 
+    def risk_factors(self) -> tuple[str, ...]:
+        return (RISK_CREDIT_SPREAD, RISK_DEFAULT_INTENSITY, RISK_RECOVERY_RATE)
+
 
 @dataclass(frozen=True)
-class CDSIndex:
+class CDSIndex(Instrument):
     """Index CDS on a named credit index with fixed spread."""
 
+    ASSET_CLASS = "Credit"
     notional: float
     spread: float
     maturity: float
     index: str
     currency: str = "USD"
 
+    def risk_factors(self) -> tuple[str, ...]:
+        return (RISK_CREDIT_SPREAD, RISK_DEFAULT_INTENSITY, RISK_RECOVERY_RATE)
 
+
+# Credit Optionality
 @dataclass(frozen=True)
-class CreditDefaultSwaption:
+class CreditDefaultSwaption(Instrument):
     """Option to enter a CDS at a strike spread."""
 
+    ASSET_CLASS = "Credit"
     notional: float
     strike: float
     maturity: float
@@ -39,16 +60,29 @@ class CreditDefaultSwaption:
     option_type: str = "payer"
     currency: str = "USD"
 
+    def risk_factors(self) -> tuple[str, ...]:
+        return (
+            RISK_CREDIT_SPREAD,
+            RISK_CREDIT_VOL,
+            RISK_DEFAULT_INTENSITY,
+            RISK_RECOVERY_RATE,
+        )
 
+
+# Credit-Linked Payoffs
 @dataclass(frozen=True)
-class TotalReturnSwap:
+class TotalReturnSwap(Instrument):
     """Total return swap exchanging asset return for funding rate."""
 
+    ASSET_CLASS = "Credit"
     notional: float
     maturity: float
     reference: str
     funding_rate: float
     currency: str = "USD"
+
+    def risk_factors(self) -> tuple[str, ...]:
+        return (RISK_ASSET_SPOT, RISK_FUNDING_RATE, RISK_CREDIT_SPREAD)
 
 
 __all__ = [
