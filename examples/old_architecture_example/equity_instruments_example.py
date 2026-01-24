@@ -1,10 +1,11 @@
 """Placeholder equity instruments."""
 
-from risk_engine.core.instruments import EquityForward, EuropeanOption
-from risk_engine.core.instrument_sets.instruments_equity import (
+from risk_engine.instruments.assets.instruments_equity import (
     EquityBarrierOption,
     EquityDigitalOption,
+    EquityForward,
     EquityIndexFuture,
+    EuropeanOption,
     VarianceSwap,
 )
 

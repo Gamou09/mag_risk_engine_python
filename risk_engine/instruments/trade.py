@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
-from risk_engine.instruments.base import Instrument
+from risk_engine.instruments.assets.instrument_base import Instrument
 
 
 @dataclass(frozen=True)

@@ -1,12 +1,12 @@
-"""Hybrid, multi-asset, and exotic instrument placeholders."""
+"""Hybrid, multi-asset, and exotic instruments."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Sequence
 
-from risk_engine.core.instrument_sets.instrument_base import Instrument
-from risk_engine.core.instrument_sets.risk_factors import (
+from risk_engine.instruments.assets.instrument_base import Instrument
+from risk_engine.instruments.assets.risk_factors import (
     RISK_CORRELATION,
     RISK_CREDIT_SPREAD,
     RISK_DIVIDEND_YIELD,

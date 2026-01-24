@@ -1,11 +1,11 @@
-"""Commodity instrument placeholders."""
+"""Commodity instruments."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from risk_engine.core.instrument_sets.instrument_base import Instrument
-from risk_engine.core.instrument_sets.risk_factors import (
+from risk_engine.instruments.assets.instrument_base import Instrument
+from risk_engine.instruments.assets.risk_factors import (
     RISK_COMMODITY_SPOT,
     RISK_COMMODITY_VOL,
     RISK_CONVENIENCE_YIELD,
@@ -13,7 +13,7 @@ from risk_engine.core.instrument_sets.risk_factors import (
 )
 
 
-# Linear Commodities
+# Spots and forwards
 @dataclass(frozen=True)
 class CommoditySpot(Instrument):
     """Commodity spot instrument with current price."""
@@ -54,6 +54,7 @@ class CommodityFuture(Instrument):
         return (RISK_COMMODITY_SPOT, RISK_CONVENIENCE_YIELD, RISK_INTEREST_RATE)
 
 
+# Swaps
 @dataclass(frozen=True)
 class CommoditySwap(Instrument):
     """Commodity fixed-for-floating swap on a specified commodity."""
@@ -68,7 +69,7 @@ class CommoditySwap(Instrument):
         return (RISK_COMMODITY_SPOT, RISK_CONVENIENCE_YIELD, RISK_INTEREST_RATE)
 
 
-# Commodity Optionality
+# Options
 @dataclass(frozen=True)
 class CommodityOption(Instrument):
     """Commodity option with spot, strike, and volatility inputs."""

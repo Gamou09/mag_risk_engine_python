@@ -1,6 +1,6 @@
 """Placeholder FX instruments."""
 
-from risk_engine.core.instrument_sets.instruments_fx import (
+from risk_engine.instruments.assets.instruments_fx import (
     FXDigitalOption,
     FXForward,
     FXOption,

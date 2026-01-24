@@ -1,6 +1,6 @@
 """Placeholder interest rate instruments."""
 
-from risk_engine.core.instrument_sets.instruments_rates import (
+from risk_engine.instruments.assets.instruments_rates import (
     BondOption,
     Cap,
     Floor,

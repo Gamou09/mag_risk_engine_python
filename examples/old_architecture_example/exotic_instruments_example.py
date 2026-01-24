@@ -1,6 +1,6 @@
 """Placeholder multi-asset and exotic instruments."""
 
-from risk_engine.core.instrument_sets.instruments_exotic import (
+from risk_engine.instruments.assets.instruments_hybrid_exotic_mutliAsset_other import (
     BasketOption,
     ForwardStartOption,
     QuantoOption,

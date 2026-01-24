@@ -5,20 +5,20 @@ Note: pricing implementations live under risk_engine/models/pricing.
 
 from __future__ import annotations
 
-from risk_engine.core.instrument_sets.instruments_commodities import (  # noqa: F401
+from risk_engine.instruments.assets.instruments_commodities import (  # noqa: F401
     CommodityForward,
     CommodityFuture,
     CommodityOption,
     CommoditySpot,
     CommoditySwap,
 )
-from risk_engine.core.instrument_sets.instruments_credit import (  # noqa: F401
+from risk_engine.instruments.assets.instruments_credit import (  # noqa: F401
     CDSIndex,
     CreditDefaultSwap,
     CreditDefaultSwaption,
     TotalReturnSwap,
 )
-from risk_engine.core.instrument_sets.instruments_equity import (  # noqa: F401
+from risk_engine.instruments.assets.instruments_equity import (  # noqa: F401
     EquityBarrierOption,
     EquityDigitalOption,
     EquityForward,
@@ -27,20 +27,21 @@ from risk_engine.core.instrument_sets.instruments_equity import (  # noqa: F401
     EuropeanOption,
     VarianceSwap,
 )
-from risk_engine.core.instrument_sets.instruments_exotic import (  # noqa: F401
-    BasketOption,
-    ForwardStartOption,
-    QuantoOption,
-    RainbowOption,
-)
-from risk_engine.core.instrument_sets.instruments_fx import (  # noqa: F401
+from risk_engine.instruments.assets.instruments_fx import (  # noqa: F401
     FXDigitalOption,
     FXForward,
     FXOption,
     FXSpot,
     FXSwap,
 )
-from risk_engine.core.instrument_sets.instruments_rates import (  # noqa: F401
+from risk_engine.instruments.assets.instruments_hybrid_exotic_mutliAsset_other import (  # noqa: F401
+    BasketOption,
+    ConvertibleBond,
+    ForwardStartOption,
+    QuantoOption,
+    RainbowOption,
+)
+from risk_engine.instruments.assets.instruments_rates import (  # noqa: F401
     BondOption,
     Cap,
     FixedRateBond,
@@ -88,4 +89,5 @@ __all__ = [
     "QuantoOption",
     "RainbowOption",
     "ForwardStartOption",
+    "ConvertibleBond",
 ]

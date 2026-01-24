@@ -12,7 +12,7 @@ from risk_engine.scenarios.apply import apply_shocks
 from risk_engine.scenarios.shock import Shock
 
 # risk_engine/risk/runner.py
-from risk_engine.instruments.base import Instrument
+from risk_engine.instruments.assets.instrument_base import Instrument
 from risk_engine.pricing.context import PricingContext
 from risk_engine.pricing.registry import PricerRegistry
 

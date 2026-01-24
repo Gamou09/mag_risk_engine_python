@@ -1,6 +1,6 @@
 """Instrument interfaces and asset-specific products."""
 
-from .base import Instrument
+from .assets.instrument_base import Instrument
 from .cashflows import Cashflow, CashflowPVModel, present_value
 from .portfolio import Portfolio, Position
 from .trade import Trade

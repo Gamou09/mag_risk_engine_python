@@ -3,7 +3,7 @@ from risk_engine.market.ids import CurveId
 from risk_engine.market.state import MarketState
 from risk_engine.pricing.context import PricingContext
 from risk_engine.pricing.bootstrap import default_registry
-from risk_engine.instruments.asset.rates.irs import InterestRateSwap
+from risk_engine.instruments.assets.instruments_rates import PricingInterestRateSwap as InterestRateSwap
 
 curve = CurveId("OIS_USD_3M")
 

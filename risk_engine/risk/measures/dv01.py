@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from risk_engine.scenarios.shock import ShockSet
 from risk_engine.scenarios.apply import apply_shocks
 from risk_engine.pricing.context import PricingContext
-from risk_engine.instruments.base import Instrument
+from risk_engine.instruments.assets.instrument_base import Instrument
 from risk_engine.pricing.registry import PricerRegistry
 
 @dataclass(frozen=True)

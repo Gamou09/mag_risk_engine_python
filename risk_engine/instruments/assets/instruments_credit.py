@@ -1,11 +1,11 @@
-"""Credit instrument placeholders."""
+"""Credit instruments."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from risk_engine.core.instrument_sets.instrument_base import Instrument
-from risk_engine.core.instrument_sets.risk_factors import (
+from risk_engine.instruments.assets.instrument_base import Instrument
+from risk_engine.instruments.assets.risk_factors import (
     RISK_ASSET_SPOT,
     RISK_CREDIT_SPREAD,
     RISK_CREDIT_VOL,
@@ -15,7 +15,7 @@ from risk_engine.core.instrument_sets.risk_factors import (
 )
 
 
-# Pure Credit Instruments
+# CDS and related
 @dataclass(frozen=True)
 class CreditDefaultSwap(Instrument):
     """CDS on a single reference entity with fixed spread."""
@@ -46,7 +46,6 @@ class CDSIndex(Instrument):
         return (RISK_CREDIT_SPREAD, RISK_DEFAULT_INTENSITY, RISK_RECOVERY_RATE)
 
 
-# Credit Optionality
 @dataclass(frozen=True)
 class CreditDefaultSwaption(Instrument):
     """Option to enter a CDS at a strike spread."""
@@ -69,7 +68,7 @@ class CreditDefaultSwaption(Instrument):
         )
 
 
-# Credit-Linked Payoffs
+# Total return swaps
 @dataclass(frozen=True)
 class TotalReturnSwap(Instrument):
     """Total return swap exchanging asset return for funding rate."""

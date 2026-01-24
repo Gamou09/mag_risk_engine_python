@@ -1,6 +1,6 @@
 """Placeholder commodities instruments."""
 
-from risk_engine.core.instrument_sets.instruments_commodities import (
+from risk_engine.instruments.assets.instruments_commodities import (
     CommodityForward,
     CommodityFuture,
     CommodityOption,

@@ -1,20 +1,23 @@
-"""FX instrument placeholders."""
+"""FX instruments."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from risk_engine.core.instrument_sets.instrument_base import Instrument
-from risk_engine.core.instrument_sets.risk_factors import (
+from risk_engine.instruments.assets.instrument_base import Instrument as AssetInstrument
+from risk_engine.instruments.assets.risk_factors import (
+    RISK_DISCOUNT_CURVE,
+    RISK_FX_RATE,
     RISK_FX_SPOT,
     RISK_FX_VOL,
     RISK_INTEREST_RATE_DIFFERENTIAL,
+    RISK_YIELD_CURVE,
 )
 
 
-# Linear FX
+# Spots and forwards
 @dataclass(frozen=True)
-class FXSpot(Instrument):
+class FXSpot(AssetInstrument):
     """FX spot instrument with currency pair and spot rate."""
 
     ASSET_CLASS = "FX"
@@ -26,7 +29,7 @@ class FXSpot(Instrument):
 
 
 @dataclass(frozen=True)
-class FXForward(Instrument):
+class FXForward(AssetInstrument):
     """FX forward contract with agreed forward rate and maturity."""
 
     ASSET_CLASS = "FX"
@@ -39,8 +42,9 @@ class FXForward(Instrument):
         return (RISK_FX_SPOT, RISK_INTEREST_RATE_DIFFERENTIAL)
 
 
+# Swaps
 @dataclass(frozen=True)
-class FXSwap(Instrument):
+class FXSwap(AssetInstrument):
     """FX swap with near and far legs on the same currency pair."""
 
     ASSET_CLASS = "FX"
@@ -54,9 +58,9 @@ class FXSwap(Instrument):
         return (RISK_FX_SPOT, RISK_INTEREST_RATE_DIFFERENTIAL)
 
 
-# FX Optionality
+# Options
 @dataclass(frozen=True)
-class FXOption(Instrument):
+class FXOption(AssetInstrument):
     """Vanilla FX option with spot, strike, and volatility inputs."""
 
     ASSET_CLASS = "FX"
@@ -72,7 +76,7 @@ class FXOption(Instrument):
 
 
 @dataclass(frozen=True)
-class FXDigitalOption(Instrument):
+class FXDigitalOption(AssetInstrument):
     """Digital FX option paying fixed payout if in the money."""
 
     ASSET_CLASS = "FX"
@@ -87,10 +91,22 @@ class FXDigitalOption(Instrument):
         return (RISK_FX_SPOT, RISK_INTEREST_RATE_DIFFERENTIAL, RISK_FX_VOL)
 
 
-__all__ = [
-    "FXSpot",
-    "FXForward",
-    "FXSwap",
-    "FXOption",
-    "FXDigitalOption",
-]
+# Cross-currency swaps
+@dataclass(frozen=True)
+class CrossCurrencySwap(AssetInstrument):
+    """Sketch of a cross-currency swap instrument."""
+
+    ASSET_CLASS = "FX"
+    notional: float
+    pay_currency: str
+    receive_currency: str
+    maturity: float
+
+    def risk_factors(self) -> tuple[str, ...]:
+        return (RISK_FX_RATE, RISK_YIELD_CURVE, RISK_DISCOUNT_CURVE)
+
+
+# TODO: add legs, payment schedules, and basis spreads.
+
+
+__all__ = ["FXSpot", "FXForward", "FXSwap", "FXOption", "FXDigitalOption", "CrossCurrencySwap"]

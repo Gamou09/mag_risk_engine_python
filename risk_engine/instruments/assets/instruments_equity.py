@@ -1,11 +1,11 @@
-"""Equity instrument placeholders."""
+"""Equity instruments."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from risk_engine.core.instrument_sets.instrument_base import Instrument
-from risk_engine.core.instrument_sets.risk_factors import (
+from risk_engine.instruments.assets.instrument_base import Instrument
+from risk_engine.instruments.assets.risk_factors import (
     RISK_DIVIDEND_YIELD,
     RISK_EQUITY_SPOT,
     RISK_EQUITY_VOL,
@@ -13,7 +13,7 @@ from risk_engine.core.instrument_sets.risk_factors import (
 )
 
 
-# Linear Equity
+# Spots and forwards
 @dataclass(frozen=True)
 class EquitySpot(Instrument):
     """Spot equity instrument with current price and optional ticker."""
@@ -57,7 +57,7 @@ class EquityIndexFuture(Instrument):
         return (RISK_EQUITY_SPOT, RISK_DIVIDEND_YIELD, RISK_INTEREST_RATE)
 
 
-# Equity Optionality
+# Options
 @dataclass(frozen=True)
 class EuropeanOption(Instrument):
     """Vanilla European option on equity with Black-Scholes style inputs."""
@@ -127,7 +127,7 @@ class EquityBarrierOption(Instrument):
         )
 
 
-# Volatility Products
+# Variance products
 @dataclass(frozen=True)
 class VarianceSwap(Instrument):
     """Variance swap on equity index with variance strike and maturity."""

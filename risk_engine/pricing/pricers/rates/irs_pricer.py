@@ -5,7 +5,7 @@ from risk_engine.pricing.pricer import Pricer
 from risk_engine.pricing.context import PricingContext
 from risk_engine.pricing.result import PricingResult
 from risk_engine.common.types import Money, Currency
-from risk_engine.instruments.asset.rates.irs import InterestRateSwap
+from risk_engine.instruments.assets.instruments_rates import PricingInterestRateSwap as InterestRateSwap
 
 @dataclass(frozen=True)
 class InterestRateSwapPricer(Pricer):
