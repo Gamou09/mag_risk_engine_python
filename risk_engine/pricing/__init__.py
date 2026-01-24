@@ -10,10 +10,6 @@ from risk_engine.models.pricing import (
     present_value,
 )
 
-#from .context import PricingContext
-# from .registry import PricerRegistry
-# from .result import PricingResult
-
 # risk_engine/pricing/__init__.py  (or a bootstrap module)
 from risk_engine.pricing.registry import PricerRegistry
 from risk_engine.pricing.pricers.rates.fixed_leg_pricer import FixedLegPricer

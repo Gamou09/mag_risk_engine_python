@@ -1,14 +1,21 @@
+from risk_engine.market.curve_registry import default_curve_registry
+from risk_engine.market.ids import CurveId
 from risk_engine.market.state import MarketState
 from risk_engine.pricing.context import PricingContext
-from risk_engine.pricing import default_registry
+from risk_engine.pricing.bootstrap import default_registry
 from risk_engine.instruments.asset.rates.fixed_leg import FixedLeg
 
 def main() -> None:
-    state = MarketState(factors={
-    "DF.USD.USD.OIS.1Y": 0.97,
-    "DF.USD.USD.OIS.2Y": 0.94,
-    "DF.USD.USD.OIS.3Y": 0.91,
-    })
+    curve = CurveId("OIS_USD_3M")
+    state = MarketState(
+        factors={
+            "DF.OIS_USD_3M.1Y": 0.97,
+            "DF.OIS_USD_3M.2Y": 0.94,
+            "DF.OIS_USD_3M.3Y": 0.91,
+        },
+        discount_curves={"USD": curve},
+        registry=default_curve_registry(),
+    )
 
     ctx = PricingContext(market=state, method="analytic")
     reg = default_registry()

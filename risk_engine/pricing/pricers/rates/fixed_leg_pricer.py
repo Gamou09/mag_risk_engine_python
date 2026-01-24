@@ -9,17 +9,16 @@ from risk_engine.instruments.asset.rates.fixed_leg import FixedLeg
 
 @dataclass(frozen=True)
 class FixedLegPricer(Pricer):
-    discount_curve_id: str = "USD.OIS"  # used only to build factor keys
-
     def price(self, instrument: FixedLeg, ctx: PricingContext) -> PricingResult:
         if len(instrument.pay_times) != len(instrument.accrual_factors):
             raise ValueError("pay_times and accrual_factors must have same length")
 
         pv = 0.0
         greeks = {}
+        discount_curve = ctx.market.discount_curve_for(instrument.ccy)
 
         for t, accr in zip(instrument.pay_times, instrument.accrual_factors):
-            key = f"DF.{instrument.ccy}.{self.discount_curve_id}.{t}"
+            key = discount_curve.df_key(t)
             df = ctx.market.get(key)
 
             cf = instrument.notional * instrument.fixed_rate * accr
@@ -31,7 +30,7 @@ class FixedLegPricer(Pricer):
 
         if instrument.exchange_notional_at_maturity and instrument.pay_times:
             tN = instrument.pay_times[-1]
-            keyN = f"DF.{instrument.ccy}.{self.discount_curve_id}.{tN}"
+            keyN = discount_curve.df_key(tN)
             dfN = ctx.market.get(keyN)
             pv += instrument.notional * dfN
             greeks[keyN] = greeks.get(keyN, 0.0) + instrument.notional
@@ -39,5 +38,5 @@ class FixedLegPricer(Pricer):
         return PricingResult(
             pv=Money(pv, Currency(instrument.ccy)),
             greeks=greeks,
-            explain=(f"FixedLeg discounted on {self.discount_curve_id}",),
+            explain=(f"FixedLeg discounted on {discount_curve.name}",),
         )

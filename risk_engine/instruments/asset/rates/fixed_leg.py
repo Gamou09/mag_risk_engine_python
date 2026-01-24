@@ -1,8 +1,9 @@
 # risk_engine/instruments/asset/rates/fixed_leg.py
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Sequence
 from risk_engine.instruments.base import Instrument
+from risk_engine.market.ids import CurveId
 
 @dataclass(frozen=True)
 class FixedLeg(Instrument):
