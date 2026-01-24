@@ -39,5 +39,4 @@ irs = InterestRateSwap(
 
 res = reg.price(irs, ctx)
 print("PV:", res.pv)
-print("Greeks keys:", list(res.greeks.keys())[:5], "...")
-print(res.greeks)
+print("Greeks:", list(res.greeks()))

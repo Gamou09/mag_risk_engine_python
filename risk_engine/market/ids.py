@@ -3,6 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
+
+
+class CurveRole(str, Enum):
+    """Curve types supported by the market container."""
+
+    DISCOUNT = "DISCOUNT"
+    FORWARD = "FORWARD"
+    BASIS = "BASIS"
+    INFLATION = "INFLATION"
 
 
 @dataclass(frozen=True)
@@ -23,4 +33,4 @@ class CurveId:
         return self.name
 
 
-__all__ = ["CurveId"]
+__all__ = ["CurveId", "CurveRole"]
