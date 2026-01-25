@@ -7,9 +7,6 @@ helpers. Outside the quoted grid we flat-extrapolate.
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
 from risk_engine.models.implementations.fx_gk import (
     FXEuropeanOption,
     FlatDiscountCurve,
@@ -80,16 +77,10 @@ def main() -> None:
     print(f"\nInterpolated sigma: {interp_vol:.3%}")
     print(f"Implied sigma from price: {imp_vol:.3%}")
 
-    # Optional: plot the surface (headless-safe)
+    # Optional: plot the surface (saves PNG if matplotlib is available)
     try:
-        out_path = Path(__file__).with_name("fx_vol_surface.png")
-        mpl_dir = Path(__file__).with_name(".mplconfig")
-        cache_dir = Path(__file__).with_name(".cache")
-        os.environ.setdefault("MPLCONFIGDIR", str(mpl_dir))
-        os.environ.setdefault("XDG_CACHE_HOME", str(cache_dir))
-        mpl_dir.mkdir(exist_ok=True)
-        cache_dir.mkdir(exist_ok=True)
-        surface.plot(show=False, save_path=str(out_path))
+        out_path = "examples/fx_vol_surface.png"
+        surface.plot(show=True, save_path=None)
         print(f"\nSurface plot saved to {out_path}")
     except Exception as exc:  # pragma: no cover - plotting optional
         print(f"\nSkipping surface plot (missing optional deps?): {exc}")
