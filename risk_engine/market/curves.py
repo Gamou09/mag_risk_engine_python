@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
 from risk_engine.market.ids import CurveId
-from risk_engine.models.curves.zero_curve import (
+from risk_engine.models.curves_surfaces.zero_curve import (
     BootstrappedZeroCurve,
     FlatZeroCurve,
     PiecewiseZeroCurve,

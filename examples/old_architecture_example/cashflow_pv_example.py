@@ -1,6 +1,6 @@
 """Example usage of cashflow PV utilities."""
 
-from risk_engine.models.curves import (
+from risk_engine.models.curves_surfaces import (
     BootstrappedZeroCurve,
     FlatZeroCurve,
     PiecewiseZeroCurve,

@@ -74,13 +74,23 @@ class MarketState:
 
 def _extract_curve_id(key: str) -> str | None:
     """Return the curve id portion of DF./FWD. keys or None otherwise."""
-    if key.startswith(("DF.", "FWD.")):
-        parts = key.split(".")
-        if len(parts) < 3:
-            raise ValueError(
-                f"Market factor key '{key}' must look like DF.<curve_id>.<pillar> or FWD.<curve_id>.<pillar>"
-            )
-        return parts[1]
-    return None
+    if not key.startswith(("DF.", "FWD.")):
+        return None
+
+    parts = key.split(".")
+    if len(parts) < 3:
+        raise ValueError(
+            f"Market factor key '{key}' must look like DF.<curve_id>.<pillar> or FWD.<curve_id>.<pillar>"
+        )
+
+    curve_or_pair = parts[1]
+
+    # FX forward keys (e.g., FWD.EURUSD.1M) should not be validated against the curve registry.
+    if key.startswith("FWD."):
+        clean = curve_or_pair.replace("/", "")
+        if len(clean) == 6 and clean.isalpha():
+            return None
+
+    return curve_or_pair
 
 __all__ = ["MarketState"]

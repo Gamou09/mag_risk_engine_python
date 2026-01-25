@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from risk_engine.models.curves import BootstrappedZeroCurve, FlatZeroCurve, PiecewiseZeroCurve
+from risk_engine.models.curves_surfaces import BootstrappedZeroCurve, FlatZeroCurve, PiecewiseZeroCurve
 
 
 def test_flat_zero_curve_df():

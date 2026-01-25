@@ -4,7 +4,7 @@ from risk_engine.core.engine import MarketData, PricingEngine, Scenario
 from risk_engine.core.instruments import EquityForward, FixedRateBond
 from risk_engine.core.portfolio import Portfolio, Position
 from risk_engine.metrics.var import historical_var
-from risk_engine.models.curves import FlatZeroCurve
+from risk_engine.models.curves_surfaces import FlatZeroCurve
 from risk_engine.core.instruments import EuropeanOption
 
 

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Literal
 
 from risk_engine.instruments.assets.instrument_base import Instrument as AssetInstrument
 from risk_engine.instruments.assets.risk_factors import (
@@ -110,3 +111,62 @@ class CrossCurrencySwap(AssetInstrument):
 
 
 __all__ = ["FXSpot", "FXForward", "FXSwap", "FXOption", "FXDigitalOption", "CrossCurrencySwap"]
+
+
+# Pricing-layer FX swap (new architecture)
+@dataclass(frozen=True)
+class PricingFXSwap(AssetInstrument):
+    """
+    Minimal FX swap for the new pricing registry.
+
+    - direction \"buy_base\": pay quote / receive base at near, unwind at far.
+    - direction \"sell_base\": receive quote / pay base at near, unwind at far.
+    PV is returned in the quote currency (second leg of the pair).
+    """
+
+    ASSET_CLASS = "FX"
+    product_type: str = "fx.swap"
+
+    pair: str = "EURUSD"  # base/quote
+    notional: float = 1_000_000.0  # amount in base currency
+    near_maturity: str = "1M"
+    far_maturity: str = "6M"
+    near_forward: float = 1.085
+    far_forward: float = 1.100
+    direction: Literal["buy_base", "sell_base"] = "buy_base"
+
+    def risk_factors(self) -> tuple[str, ...]:
+        return (RISK_FX_SPOT, RISK_INTEREST_RATE_DIFFERENTIAL)
+
+
+@dataclass(frozen=True)
+class FXEuropeanOption(AssetInstrument):
+    """Minimal FX European option used by GK pricer (domestic payout)."""
+
+    ASSET_CLASS = "FX"
+    product_type: str = field(default="fx.option.european", init=False)
+
+    call_put: Literal["C", "P"] | str = "C"
+    strike: float = 1.0
+    expiry: float = 1.0  # year fraction
+    notional: float = 1.0  # domestic payout
+    direction: int = 1  # +1 long, -1 short
+    underlying: str = "UNKNOWN"
+
+    def __post_init__(self) -> None:
+        cp = self.call_put.upper()
+        if cp not in {"C", "P"}:
+            raise ValueError("call_put must be 'C' or 'P'")
+        if self.expiry < 0.0:
+            raise ValueError("expiry must be >= 0")
+        if self.strike <= 0.0 or self.notional <= 0.0:
+            raise ValueError("strike and notional must be > 0")
+        if self.direction not in {1, -1}:
+            raise ValueError("direction must be +1 (long) or -1 (short)")
+        if not isinstance(self.underlying, str) or not self.underlying:
+            raise ValueError("underlying must be a non-empty string")
+
+    def risk_factors(self) -> tuple[str, ...]:
+        return (RISK_FX_SPOT, RISK_INTEREST_RATE_DIFFERENTIAL, RISK_FX_VOL)
+
+__all__ += ["PricingFXSwap", "FXEuropeanOption"]

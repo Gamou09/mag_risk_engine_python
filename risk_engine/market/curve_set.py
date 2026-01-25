@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace, field
-from types import MappingProxyType
 from typing import Mapping, Optional
 
 from risk_engine.market.curves import DiscountCurve, ForwardCurve
 from risk_engine.market.ids import CurveId, CurveRole
-
-
-def _freeze_mapping(mapping: Mapping) -> Mapping:
-    return MappingProxyType(dict(mapping))
+from risk_engine.utils.collections import freeze_mapping
 
 
 @dataclass(frozen=True)
@@ -23,8 +19,8 @@ class CurveSet:
     inflation: Optional[object] = None
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "forwards", _freeze_mapping(self.forwards))
-        object.__setattr__(self, "basis", _freeze_mapping(self.basis))
+        object.__setattr__(self, "forwards", freeze_mapping(self.forwards))
+        object.__setattr__(self, "basis", freeze_mapping(self.basis))
 
     def forward(self, index: str) -> ForwardCurve:
         try:

@@ -1,14 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from types import MappingProxyType
 from typing import Mapping
 
 from risk_engine.market.curve_set import CurveSet
-
-
-def _freeze_mapping(mapping: Mapping) -> Mapping:
-    return MappingProxyType(dict(mapping))
+from risk_engine.utils.collections import freeze_mapping
 
 
 @dataclass(frozen=True)
@@ -19,8 +15,8 @@ class Market:
     fx_spot: Mapping[tuple[str, str], float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "curve_sets", _freeze_mapping(self.curve_sets))
-        object.__setattr__(self, "fx_spot", _freeze_mapping(self.fx_spot))
+        object.__setattr__(self, "curve_sets", freeze_mapping(self.curve_sets))
+        object.__setattr__(self, "fx_spot", freeze_mapping(self.fx_spot))
 
     def curves(self, currency: str) -> CurveSet:
         try:

@@ -6,16 +6,9 @@ import math
 from typing import Any, Mapping
 
 from risk_engine.core.instruments import EuropeanOption
+from risk_engine.utils.numeric import norm_cdf as _norm_cdf, norm_pdf as _norm_pdf
 
 from .base import PricingModel
-
-
-def _norm_cdf(x: float) -> float:
-    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
-
-
-def _norm_pdf(x: float) -> float:
-    return math.exp(-0.5 * x * x) / math.sqrt(2.0 * math.pi)
 
 
 def _validate_option(option: EuropeanOption) -> str:

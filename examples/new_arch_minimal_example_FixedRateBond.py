@@ -7,6 +7,17 @@ def main() -> None:
         face=1_000_000,
         coupon_rate=0.03,
         maturity=3.0,
+        payments_per_year=12,
+    )
+
+    model = DiscountingModel(rate=0.02)
+    price = model.price(bond)
+    print(f"FixedRateBond price: {price:,.2f}")
+
+    bond = FixedRateBond(
+        face=1_000_000,
+        coupon_rate=0.03,
+        maturity=3.0,
         payments_per_year=2,
     )
 
