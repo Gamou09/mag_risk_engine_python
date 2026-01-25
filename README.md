@@ -4,13 +4,20 @@ Modular quantitative risk engine for pricing simulation, exposure profiles, and 
 
 **PS:** This repository consolidates my learnings and serves as a sandbox for experimenting with new ideas (with the good help of my now favourite friend: codex ).  Feel free to leave suggestions, feedback, or other contributions 🙂
 
-## Features to implement
-- Modular framework for quantitative risk metrics (VaR, PFE, CaR)
-- Monte Carlo and historical simulation engines
-- Portfolio-level risk aggregation
-- Abstractions supporting equities, fixed income, energy, and derivatives
-- Extensible design for additional asset classes
-- Suitable for both research and production environments
+## Features
+
+### Implemented
+- Value-at-Risk: historical, parametric, and Monte Carlo flavours with portfolio aggregation from return series (`risk_engine/metrics/var.py`).
+- Potential Future Exposure: scenario, analytic, and Monte Carlo profiles with netting and threshold support (`risk_engine/metrics/pfe.py`).
+- Instruments, pricing, and market stack across FX, rates, credit, commodities, and equities (analytic models: discounting, Black-Scholes/Garman-Kohlhagen, swap PV; pricing registry and context wiring).
+- Scenario and Monte Carlo utilities: GBM, Heston, Hull-White, and Vasicek path simulators plus stress/historical/shock scenario builders.
+- Market data containers and curve/surface infrastructure with CSV/DB provider hooks.
+
+### To implement next
+- Capital-at-Risk metric (placeholder in `risk_engine/metrics/car.py`).
+- Greeks/sensitivities and aggregation utilities (delta/vega/rho/etc. plus netting/allocation) currently stubbed in `metrics/sensitivities.py` and `risk/aggregation`.
+- Monte Carlo and lattice pricing engines wired to instruments, including path-dependent payoffs and control variates.
+- Reporting/export and explain outputs (tables, CSV/Parquet) to accompany risk runs.
 
 ## Running examples
 
@@ -36,43 +43,48 @@ Alternative if you prefer running scripts directly:
 PYTHONPATH=. python examples/historical_var_example.py
 ```
 
-## Suggested Repository Structure
+## Repository Structure
 
 ```text
 mag_risk_engine_python/
-│
 ├── risk_engine/
-│   ├── __init__.py
+│   ├── common/
 │   ├── config/
-│   │
 │   ├── core/
-│   │   ├── engine.py
-│   │   ├── portfolio.py
-│   │   ├── instruments.py
-│   │
-│   ├── models/
-│   │   ├── stochastic/
-│   │   ├── pricing/
-│   │   └── curves/
-│   │
+│   ├── instruments/
+│   │   └── assets/
+│   ├── market/
+│   │   └── providers/
 │   ├── metrics/
-│   │   ├── var.py
-│   │   ├── pfe.py
-│   │   ├── car.py
-│   │   └── sensitivities.py
-│   │
+│   ├── models/
+│   │   ├── calibration/
+│   │   ├── curves_surfaces/
+│   │   ├── implementations/
+│   │   ├── pricing/
+│   │   └── stochastic/
+│   ├── pricing/
+│   │   ├── engines/
+│   │   ├── pricers/
+│   │   └── sensitivities/
+│   ├── reporting/
+│   ├── risk/
+│   │   ├── aggregation/
+│   │   └── measures/
+│   ├── scenarios/
+│   │   └── simulation/
 │   ├── simulation/
-│   │   ├── monte_carlo.py
-│   │   └── scenarios.py
-│   │
-│   └── utils/
-│
-├── tests/
+│   ├── utils/
+│   └── tests/
+│       ├── unit/
+│       ├── integration/
+│       └── regression/
 ├── examples/
-├── notebooks/
+│   └── old_architecture_example/
+├── tests/
 ├── docs/
-│
+├── notebooks/
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
-└── CONTRIBUTING.md
+└── mag_risk_engine_python.egg-info
+```
