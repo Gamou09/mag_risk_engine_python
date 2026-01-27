@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import math
 from typing import Dict, Literal
+from scipy.optimize import brentq
 
 from risk_engine.instruments.assets.instruments_fx import FXEuropeanOption
 from risk_engine.utils.numeric import (
@@ -38,6 +39,9 @@ __all__ = [
     "gk_price",
     "gk_greeks",
     "gk_implied_vol",
+    "bs_forward_price",
+    "bs_forward_delta",
+    "strike_from_delta",
     "GarmanKohlhagen",
 ]
 
@@ -48,11 +52,158 @@ __all__ = [
 
 _EPS_T = 1e-12  # threshold for treating maturity as now
 _EPS_SIGMA = 1e-12  # avoid divide-by-zero in Greeks
+_VOL_FLOOR = 1e-4
+_VOL_CAP = 5.0
+_BRACKET_EXPANSION = 0.75
 
 
 # ---------------------------------------------------------------------------
 # Core pricing & Greeks
 # ---------------------------------------------------------------------------
+
+
+def _clip_vol(vol: float) -> float:
+    return min(max(vol, _VOL_FLOOR), _VOL_CAP)
+
+
+def _d1_d2_forward(forward: float, strike: float, vol: float, t: float) -> tuple[float, float]:
+    sigma = _clip_vol(vol)
+    if t <= _EPS_T:
+        return 0.0, 0.0
+    sqrt_t = math.sqrt(t)
+    denom = sigma * sqrt_t
+    d1 = (math.log(forward / strike) + 0.5 * sigma * sigma * t) / denom
+    d2 = d1 - denom
+    return d1, d2
+
+
+def bs_forward_price(
+    forward: float,
+    strike: float,
+    vol: float,
+    t: float,
+    call_put: str = "C",
+    df_dom: float = 1.0,
+) -> float:
+    """Black price using forward as underlying; discounted by df_dom."""
+    _validate_positive("forward", forward)
+    _validate_positive("strike", strike)
+    if df_dom <= 0.0:
+        raise ValueError("df_dom must be > 0")
+
+    sigma = _clip_vol(vol)
+    cp = call_put.upper()
+    cp_sign = 1.0 if cp == "C" else -1.0
+    if t <= _EPS_T or sigma <= _VOL_FLOOR:
+        intrinsic = max(cp_sign * (forward - strike), 0.0)
+        return float(df_dom * intrinsic)
+
+    d1, d2 = _d1_d2_forward(forward, strike, sigma, t)
+    price_fwd = cp_sign * (
+        forward * _norm_cdf(cp_sign * d1) - strike * _norm_cdf(cp_sign * d2)
+    )
+    return float(df_dom * price_fwd)
+
+
+def bs_forward_delta(
+    forward: float,
+    strike: float,
+    vol: float,
+    t: float,
+    call_put: str = "C",
+    df_dom: float = 1.0,
+    df_for: float = 1.0,
+    delta_type: Literal["forward", "spot"] = "forward",
+    premium_adjusted: bool = False,
+    spot: float | None = None,
+) -> float:
+    """FX delta with forward/spot and premium-adjusted conventions."""
+    _validate_positive("forward", forward)
+    _validate_positive("strike", strike)
+    if df_dom <= 0.0 or df_for <= 0.0:
+        raise ValueError("discount factors must be > 0")
+
+    cp = call_put.upper()
+    cp_sign = 1.0 if cp == "C" else -1.0
+    sigma = _clip_vol(vol)
+
+    if t <= _EPS_T or sigma <= _VOL_FLOOR:
+        itm = cp_sign * (forward - strike) > 0.0
+        base_forward = cp_sign if itm else 0.0
+    else:
+        d1, _ = _d1_d2_forward(forward, strike, sigma, t)
+        base_forward = cp_sign * _norm_cdf(cp_sign * d1)
+
+    base_delta = base_forward if delta_type == "forward" else df_for * base_forward
+    if not premium_adjusted:
+        return float(base_delta)
+
+    premium = bs_forward_price(forward, strike, sigma, t, cp, df_dom)
+    if delta_type == "spot":
+        if spot is None:
+            spot = forward * df_dom / df_for
+        adjustment = premium / spot
+    else:
+        adjustment = premium / (df_dom * forward)
+    return float(base_delta - adjustment)
+
+
+def strike_from_delta(
+    target_delta: float,
+    forward: float,
+    t: float,
+    vol: float,
+    call_put: str = "C",
+    df_dom: float = 1.0,
+    df_for: float = 1.0,
+    delta_type: Literal["forward", "spot"] = "forward",
+    premium_adjusted: bool = False,
+    spot: float | None = None,
+    k_lower: float = -1.5,
+    k_upper: float = 1.5,
+    max_expansions: int = 8,
+    tol: float = 1e-10,
+) -> float:
+    """Invert delta to strike using Brent search in log-strike space."""
+    _validate_positive("forward", forward)
+    if df_dom <= 0.0 or df_for <= 0.0:
+        raise ValueError("discount factors must be > 0")
+
+    sigma = _clip_vol(vol)
+
+    def delta_for_k(k: float) -> float:
+        strike = forward * math.exp(k)
+        return bs_forward_delta(
+            forward,
+            strike,
+            sigma,
+            t,
+            call_put=call_put,
+            df_dom=df_dom,
+            df_for=df_for,
+            delta_type=delta_type,
+            premium_adjusted=premium_adjusted,
+            spot=spot,
+        )
+
+    low_k = k_lower
+    high_k = k_upper
+    for _ in range(max_expansions + 1):
+        f_low = delta_for_k(low_k) - target_delta
+        f_high = delta_for_k(high_k) - target_delta
+        if f_low == 0.0:
+            return forward * math.exp(low_k)
+        if f_high == 0.0:
+            return forward * math.exp(high_k)
+        if f_low * f_high < 0.0:
+            root = brentq(lambda kk: delta_for_k(kk) - target_delta, low_k, high_k, xtol=tol, rtol=1e-12, maxiter=200)
+            return float(forward * math.exp(root))
+        low_k -= _BRACKET_EXPANSION
+        high_k += _BRACKET_EXPANSION
+
+    raise ValueError(
+        "Failed to bracket target delta; widen k bounds or verify input consistency."
+    )
 
 
 def gk_price(

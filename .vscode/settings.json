@@ -1,0 +1,15 @@
+{
+    "code-runner.environmentVariables": {
+        "MPLCONFIGDIR": "${workspaceFolder}/.matplotlib_cache",
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "code-runner.executorMap": {
+        "python": "${workspaceFolder}/venv_mag_risk_engine/bin/python"
+    },
+    "code-runner.runInTerminal": true,
+    "python-envs.pythonProjects": [
+        "${workspaceFolder}"
+    ],
+    "python.defaultInterpreterPath": "${workspaceFolder}/venv_mag_risk_engine/bin/python",
+    "python.terminal.useEnvFile": true
+}

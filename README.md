@@ -43,6 +43,20 @@ Alternative if you prefer running scripts directly:
 PYTHONPATH=. python examples/historical_var_example.py
 ```
 
+## FX vol surface addon
+
+Quick demo (prints validation reports and pops matplotlib figures):
+
+```bash
+PYTHONPATH=. python examples/fx_vol_surface_example.py
+```
+
+Run unit tests with coverage (requires pytest + pytest-cov):
+
+```bash
+pytest
+```
+
 ## Repository Structure
 
 ```text
