@@ -5,16 +5,16 @@ from dataclasses import MISSING, fields, is_dataclass
 from types import UnionType
 from typing import Union, get_args, get_origin
 
-from risk_engine.core.instrument_sets import (
+from risk_engine.instruments.assets import (
     instruments_commodities,
     instruments_credit,
     instruments_equity,
-    instruments_exotic,
     instruments_fx,
+    instruments_hybrid_exotic_mutliAsset_other,
     instruments_rates,
 )
-from risk_engine.core.instrument_sets.instrument_base import Instrument
-from risk_engine.core.instrument_sets.risk_factors import ALL_RISK_FACTORS
+from risk_engine.instruments.assets.instrument_base import Instrument
+from risk_engine.instruments.assets.risk_factors import ALL_RISK_FACTORS
 
 MODULES = [
     instruments_rates,
@@ -22,7 +22,7 @@ MODULES = [
     instruments_equity,
     instruments_credit,
     instruments_commodities,
-    instruments_exotic,
+    instruments_hybrid_exotic_mutliAsset_other,
 ]
 ALLOWED_FACTORS = set(ALL_RISK_FACTORS)
 
