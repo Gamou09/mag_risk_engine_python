@@ -7,9 +7,10 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from .market_quotes import MarketSlice, compute_forward
-from .vol_surface import VolSurface
-from .validation import ValidationReport, validate_surface
+from risk_engine.models.fx.market_quotes import MarketSlice, compute_forward
+from risk_engine.models.fx.vol_surface import VolSurface
+from risk_engine.models.fx.validation import ValidationReport, validate_surface
+
 
 PairData = Dict[str, List[Tuple[str, float]]]
 
@@ -128,4 +129,3 @@ if __name__ == "__main__":
         for ms in slices:
             print("  ", ms.describe())
         print(report_text)
-

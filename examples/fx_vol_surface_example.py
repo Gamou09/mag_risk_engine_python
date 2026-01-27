@@ -23,7 +23,6 @@ from risk_engine.models.fx.plots import (
     plot_surface_slices,
 )
 def main() -> None:
-    print("PYTHON:", sys.executable)
     surfaces = build_example_surfaces()
     for pair, surface, slices, report_text, report in surfaces:
         print("=" * 80)
